@@ -70,42 +70,48 @@ export default function CreatePage() {
     e.preventDefault();
     setLoading(true);
     setError('');
-
+  
     if (!formData.requestHead || !formData.categoryId || !date || !time) {
       setError('Пожалуйста, заполните все обязательные поля.');
       setLoading(false);
       return;
     }
-
+  
     const requestTimeLeft = new Date(date);
     requestTimeLeft.setHours(time.getHours(), time.getMinutes(), time.getSeconds());
-
+  
     if (isNaN(requestTimeLeft.getTime()) || requestTimeLeft <= new Date()) {
       setError('Неверный или устаревший формат времени.');
       setLoading(false);
       return;
     }
-
+  
     try {
-        console.log(files);
-        const preparedFiles = await Promise.all(
-            files.map(async (file) => {
-              const content = await new Promise((resolve, reject) => {
-                const reader = new FileReader();
-                reader.onload = () => resolve(reader.result);
-                reader.onerror = reject;
-                reader.readAsDataURL(file); // Преобразуем в строку base64
-              });
+      console.log("Файлы перед отправкой:", files);
+  
+      // Проверка на поддерживаемость arrayBuffer
+      const preparedFiles = await Promise.all(
+        files.map(async (file) => {
+          if (file.arrayBuffer) {
+            try {
+              const content = await file.arrayBuffer();
               return {
                 name: slugify(file.name),
                 type: file.type,
-                content,  // строка base64
+                content,
               };
-            })
-          );
-          console.log(preparedFiles); // Убедитесь, что файлы корректно подготовлены
-
-
+            } catch (err) {
+              console.error(`Ошибка при обработке файла ${file.name}:`, err);
+              throw new Error(`Ошибка при обработке файла ${file.name}`);
+            }
+          } else {
+            console.error(`Метод arrayBuffer не поддерживается для файла ${file.name}`);
+            throw new Error(`Метод arrayBuffer не поддерживается для файла ${file.name}`);
+          }
+        })
+      );
+      console.log("Подготовленные файлы:", preparedFiles);
+  
       const response = await fetch('/api/create-request', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -114,10 +120,10 @@ export default function CreatePage() {
           files: preparedFiles,
         }),
       });
-
+  
       const result = await response.json();
       if (!result.success) throw new Error(result.error);
-
+  
       alert('Заявка успешно создана!');
       router.push('/dashboard');
     } catch (err) {
@@ -127,6 +133,8 @@ export default function CreatePage() {
       setLoading(false);
     }
   };
+  
+  
 
 
   const { getRootProps, getInputProps } = useDropzone({
