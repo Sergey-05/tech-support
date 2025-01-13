@@ -3,21 +3,15 @@ import { createClient } from '../../utils/supabase/server';
 
 export async function POST(req: Request) {
     try {
-        console.log('Получение клиента Supabase...');
         const supabase = await createClient();
 
-        console.log('Получение данных из запроса...');
         const { formData, files } = await req.json();
 
-        console.log('Обработка времени выполнения...');
         const requestTimeLeft = new Date(formData.request_time_left);
         if (isNaN(requestTimeLeft.getTime())) {
-            console.error('Ошибка: Неверный формат времени:', formData.request_time_left);
             throw new Error('Неверный формат времени.');
         }
 
-
-        console.log('Создание записи в таблице request...');
         const { data: requestData, error: requestError } = await supabase
             .from('request')
             .insert({
@@ -32,49 +26,43 @@ export async function POST(req: Request) {
             .select('request_id')
             .single();
 
-        if (requestError) {
-            console.error('Ошибка при создании записи в request:', requestError);
-            throw requestError;
-        }
+        if (requestError) throw requestError;
 
         const requestId = requestData.request_id;
-        console.log('Запись успешно создана с ID:', requestId);
 
-        console.log('Загрузка файлов...');
-        for (const file of files) {
-            console.log(`Загрузка файла: ${file.name}`);
-            const { data: fileData, error: uploadError } = await supabase.storage
-                .from('attachments')
-                .upload(`${requestId}/${file.name}`, Buffer.from(file.content, 'base64'));
+        const uploadResults = await Promise.all(
+            files.map(async (file: any) => {
+                try {
+                    const { data: fileData, error: uploadError } = await supabase.storage
+                        .from('attachments')
+                        .upload(`${requestId}/${file.name}`, Buffer.from(file.content, 'base64'));
 
-            if (uploadError) {
-                console.error(`Ошибка при загрузке файла ${file.name}:`, uploadError);
-                throw uploadError;
-            }
+                    if (uploadError) throw uploadError;
 
-            console.log(`Файл ${file.name} успешно загружен, путь:`, fileData?.path);
+                    const { error: attachmentError } = await supabase
+                        .from('attachment')
+                        .insert({
+                            request_id: requestId,
+                            attachment_path: fileData?.path,
+                            attachment_name: file.name,
+                        });
 
-            console.log('Создание записи в таблице attachment...');
-            const { error: attachmentError } = await supabase
-                .from('attachment')
-                .insert({
-                    request_id: requestId,
-                    attachment_path: fileData?.path,
-                    attachment_name: file.name,
-                });
+                    if (attachmentError) throw attachmentError;
 
-            if (attachmentError) {
-                console.error('Ошибка при создании записи в attachment:', attachmentError);
-                throw attachmentError;
-            }
+                    return { success: true, file: file.name };
+                } catch (error: any) {
+                    return { success: false, file: file.name, error: error.message };
+                }
+            })
+        );
 
-            console.log(`Запись для файла ${file.name} успешно создана.`);
+        const failedUploads = uploadResults.filter((result) => !result.success);
+        if (failedUploads.length > 0) {
+            console.error('Ошибки загрузки файлов:', failedUploads);
         }
 
-        console.log('Процесс завершен успешно.');
-        return NextResponse.json({ success: true });
+        return NextResponse.json({ success: true, failedUploads });
     } catch (error: any) {
-        console.error('Общая ошибка:', error);
         return NextResponse.json({ success: false, error: error.message }, { status: 500 });
     }
 }
