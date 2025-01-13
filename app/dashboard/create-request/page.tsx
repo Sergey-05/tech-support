@@ -91,11 +91,14 @@ export default function CreatePage() {
     try {
         console.log(files);
       const preparedFiles = await Promise.all(
-        files.map(async (file) => ({
-          name: file.name,
-          type: file.type,
-          content: btoa(String.fromCharCode(...new Uint8Array(await file.arrayBuffer()))),
-        }))
+        files.map(async (file) => {
+            const content = await file.arrayBuffer();
+            return {
+                name: file.name.replace(/[^a-zA-Z0-9.-]/g, '_'),  // Очистка имени файла
+                type: file.type,
+                content: btoa(String.fromCharCode(...new Uint8Array(content))),
+            };
+    })
       );
       console.log(preparedFiles); // Check the prepared files before submitting
 
