@@ -17,7 +17,7 @@ interface Props {
 
 export function ClientHomePage({ user, requests }: Props) {
   return (
-    <div className="max-w-4xl mx-auto p-8 bg-white shadow-xl rounded-xl">
+    <div className="p-8 bg-white shadow-xl rounded-xl">
       {/* Header Section */}
       <header className="mb-8">
         <h1 className="text-4xl font-bold text-blue-700 leading-tight">
@@ -42,7 +42,7 @@ export function ClientHomePage({ user, requests }: Props) {
                 <h3 className="text-2xl font-semibold text-blue-800">{request.request_head}</h3>
                 <p className="mt-2 text-lg text-gray-700">{request.request_descr}</p>
                 <p className="mt-2 text-sm text-gray-500">
-                  <span className="font-semibold">Дата:</span> {new Date(request.request_date).toLocaleDateString()}
+                  <span className="font-semibold">Дата:</span> {new Date(request.request_date).toLocaleString()}
                 </p>
                 <p
                   className={`mt-4 text-sm font-medium ${

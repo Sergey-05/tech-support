@@ -30,7 +30,7 @@ console.error('Error fetching user data:', userError);
     .from('request')
     .select('*')
     .eq('user_id', userDetails.user_id)
-    .in('request_status', ['active', 'in_process'])
+    .in('request_status', ['new', 'in_process'])
     .order('request_date', { ascending: false })
     .limit(5)
 
