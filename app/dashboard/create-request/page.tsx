@@ -1,15 +1,18 @@
 'use client';
 
+import dynamic from 'next/dynamic';
+
+const Skeleton = dynamic(() => import('react-skeleton-loader'), { ssr: false });
+
+
+
+
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import {
-  CustomProvider,
-  SelectPicker,
-  DatePicker,
-  TimePicker,
-} from 'rsuite';
-import 'rsuite/styles/index.less';
+import { CustomProvider, DatePicker, TimePicker } from 'rsuite';
+import 'rsuite/DatePicker/styles/index.css';
 import * as locales from 'rsuite/locales';
+import { useDropzone } from 'react-dropzone';
 
 export type Category = {
   category_id: number;
@@ -58,21 +61,11 @@ export default function CreatePage() {
     fetchData();
   }, []);
 
-  const handleInputChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
-  ) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     setFormData({
       ...formData,
       [e.target.name]: e.target.value,
     });
-  };
-
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files) {
-      const selectedFiles = Array.from(e.target.files);
-      setFiles((prev) => [...prev, ...selectedFiles]);
-      setError(null);
-    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -96,6 +89,7 @@ export default function CreatePage() {
     }
 
     try {
+        console.log(files);
       const preparedFiles = await Promise.all(
         files.map(async (file) => ({
           name: file.name,
@@ -103,6 +97,8 @@ export default function CreatePage() {
           content: btoa(String.fromCharCode(...new Uint8Array(await file.arrayBuffer()))),
         }))
       );
+      console.log(preparedFiles); // Check the prepared files before submitting
+
 
       const response = await fetch('/api/create-request', {
         method: 'POST',
@@ -125,6 +121,21 @@ export default function CreatePage() {
       setLoading(false);
     }
   };
+
+
+  const { getRootProps, getInputProps } = useDropzone({
+    onDrop: (acceptedFiles) => {
+      setFiles((prev) => {
+        console.log('prev:', prev); // Проверим старые файлы
+        console.log('acceptedFiles:', acceptedFiles); // Проверим новые файлы
+        return [...prev, ...acceptedFiles]; // Добавляем новые файлы к старым
+      });
+    },
+    multiple: true,
+  });
+  
+
+  
 
   return (
     <section className="p-4 max-w-3xl mx-auto">
@@ -187,13 +198,17 @@ export default function CreatePage() {
         </CustomProvider>
         <div>
           <label className="block text-sm font-medium">Вложения</label>
-          <input
-            type="file"
-            multiple
-            accept="image/*,video/*,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-            onChange={handleFileChange}
-            className="block w-full"
-          />
+          <div {...getRootProps()} className="p-4 border-dashed border-2 rounded-md cursor-pointer">
+            <input {...getInputProps()} />
+            <p className="text-center text-gray-500">Перетащите файлы сюда или нажмите для выбора</p>
+          </div>
+          <div className="mt-2">
+            {files.map((file, index) => (
+              <div key={index} className="flex items-center space-x-2 mt-2">
+                <span className="text-sm">{file.name}</span>
+              </div>
+            ))}
+          </div>
         </div>
         {error && <p className="text-red-500">{error}</p>}
         <button

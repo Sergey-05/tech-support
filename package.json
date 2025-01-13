@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev --turbopack",
+    "dev": "next dev",
     "build": "next build",
     "start": "next start",
     "lint": "next lint"
@@ -21,15 +21,18 @@
     "@supabase/supabase-js": "^2.47.12",
     "clsx": "^2.1.1",
     "date-fns": "^4.1.0",
-    "next": "15.1.2",
+    "next": "15.1.4",
     "pg": "^8.13.1",
     "react": "^19.0.0",
     "react-datepicker": "^7.6.0",
     "react-dom": "^19.0.0",
+    "react-dropzone": "^14.3.5",
     "react-intl": "^7.1.0",
+    "react-skeleton-loader": "^1.0.4",
     "react-time-picker": "^7.0.0",
     "react-time-picker-typescript": "^1.2.5",
     "rsuite": "^5.76.3",
+    "uuid": "^11.0.5",
     "vanilla-calendar-pro": "^3.0.3"
   },
   "devDependencies": {
@@ -37,8 +40,14 @@
     "@types/pg": "^8.11.10",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "autoprefixer": "^10.4.20",
+    "css-loader": "^7.1.2",
+    "less": "^4.2.1",
+    "less-loader": "^12.2.0",
     "postcss": "^8",
-    "tailwindcss": "^3.4.1",
+    "postcss-loader": "^8.1.1",
+    "style-loader": "^4.0.0",
+    "tailwindcss": "^3.4.17",
     "typescript": "^5"
   }
 }
