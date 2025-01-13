@@ -1,8 +1,6 @@
 'use client';
 
-import dynamic from 'next/dynamic';
 
-const Skeleton = dynamic(() => import('react-skeleton-loader'), { ssr: false });
 
 
 
@@ -92,12 +90,12 @@ export default function CreatePage() {
         console.log(files);
       const preparedFiles = await Promise.all(
         files.map(async (file) => {
-            const content = await file.arrayBuffer();
-            return {
-                name: file.name.replace(/[^a-zA-Z0-9.-]/g, '_'),  // Очистка имени файла
-                type: file.type,
-                content: btoa(String.fromCharCode(...new Uint8Array(content))),
-            };
+            const content = await file.arrayBuffer();  // Используйте arrayBuffer для бинарных данных
+        return {
+            name: slugify(file.name),  // Преобразуем имя файла
+            type: file.type,
+            content,  // передаем бинарные данные
+        };
     })
       );
       console.log(preparedFiles); // Check the prepared files before submitting
@@ -225,3 +223,7 @@ export default function CreatePage() {
     </section>
   );
 }
+function slugify(name: string): any {
+    throw new Error('Function not implemented.');
+}
+
