@@ -88,17 +88,22 @@ export default function CreatePage() {
 
     try {
         console.log(files);
-      const preparedFiles = await Promise.all(
-        files.map(async (file) => {
-            const content = await file.arrayBuffer();  // Используйте arrayBuffer для бинарных данных
-        return {
-            name: slugify(file.name),  // Преобразуем имя файла
-            type: file.type,
-            content,  // передаем бинарные данные
-        };
-    })
-      );
-      console.log(preparedFiles); // Check the prepared files before submitting
+        const preparedFiles = await Promise.all(
+            files.map(async (file) => {
+              const content = await new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = () => resolve(reader.result);
+                reader.onerror = reject;
+                reader.readAsDataURL(file); // Преобразуем в строку base64
+              });
+              return {
+                name: slugify(file.name),
+                type: file.type,
+                content,  // строка base64
+              };
+            })
+          );
+          console.log(preparedFiles); // Убедитесь, что файлы корректно подготовлены
 
 
       const response = await fetch('/api/create-request', {
