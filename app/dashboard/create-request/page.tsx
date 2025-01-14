@@ -95,10 +95,12 @@ export default function CreatePage() {
           if (file.arrayBuffer) {
             try {
               const content = await file.arrayBuffer();
+              // Преобразование ArrayBuffer в строку Base64
+              const base64Content = Buffer.from(content).toString('base64');
               return {
                 name: file.name,
                 type: file.type,
-                content,
+                content: base64Content,
               };
             } catch (err) {
               console.error(`Ошибка при обработке файла ${file.name}:`, err);
@@ -110,6 +112,7 @@ export default function CreatePage() {
           }
         })
       );
+      
       console.log("Подготовленные файлы:", preparedFiles);
   
       const response = await fetch('/api/create-request', {

@@ -54,8 +54,9 @@ export async function POST(req: Request) {
         
                     // Загружаем файл в хранилище Supabase
                     const { data: fileData, error: uploadError } = await supabase.storage
-                        .from('attachments')
-                        .upload(uniqueFileName, Buffer.from(file.content, 'base64'));
+  .from('attachments')
+  .upload(uniqueFileName, Buffer.from(file.content, 'base64')); // Указываем Base64
+
         
                     if (uploadError) throw uploadError;
         
