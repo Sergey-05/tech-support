@@ -96,7 +96,7 @@ export default function CreatePage() {
             try {
               const content = await file.arrayBuffer();
               return {
-                name: slugify(file.name),
+                name: file.name,
                 type: file.type,
                 content,
               };
@@ -236,7 +236,7 @@ export default function CreatePage() {
     </section>
   );
 }
-function slugify(name: string): any {
-    throw new Error('Function not implemented.');
-}
+// function slugify(name: string): any {
+//     throw new Error('Function not implemented.');
+// }
 
