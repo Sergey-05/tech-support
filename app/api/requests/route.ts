@@ -30,13 +30,7 @@ export async function GET(req: Request) {
     const startDate = url.searchParams.get('startDate');
     const endDate = url.searchParams.get('endDate');
 
-    // Функция для преобразования даты в UTC (с вычитанием 3 часов для учёта часового пояса MSK)
-    const convertToUTC = (dateStr: string) => {
-        const date = new Date(dateStr);
-        // Убираем 3 часа для приведения к UTC
-        date.setHours(date.getHours() - 3);
-        return date.toISOString(); // Возвращаем в ISO формате (UTC)
-    };
+
 
     // Создание запроса к базе данных
     let query = supabase
@@ -53,13 +47,12 @@ export async function GET(req: Request) {
     }
 
     if (startDate) {
-        const startDateUTC = convertToUTC(startDate);
-        query = query.gte('request_date', startDateUTC); // Сравниваем с датой в UTC
+        query = query.gte('request_date', startDate);
     }
 
     if (endDate) {
-        const endDateUTC = convertToUTC(endDate);
-        query = query.lte('request_date', endDateUTC); // Сравниваем с датой в UTC
+        const endOfDay = new Date(new Date(endDate).setHours(23, 59, 59, 999)).toISOString();
+        query = query.lte('request_date', endOfDay);
     }
 
     // Выполнение запроса
@@ -69,12 +62,7 @@ export async function GET(req: Request) {
         return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
-    // Преобразование всех полученных дат в запросе обратно в MSK (UTC+3)
-    const requestsWithAdjustedDates = requests.map((request) => {
-        const mskDate = new Date(request.request_date);
-        mskDate.setHours(mskDate.getHours() + 3); // Приводим к MSK
-        return { ...request, request_date: mskDate.toLocaleString() }; // Отображаем дату в локальном времени
-    });
+    
 
-    return NextResponse.json({ requests: requestsWithAdjustedDates }, { status: 200 });
+    return NextResponse.json({ requests }, { status: 200 });
 }

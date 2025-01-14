@@ -138,15 +138,12 @@ export default function HistoryPage() {
                             </p>
 
                             <p className="text-sm text-gray-500 mt-2">
-    <strong>Дата:</strong> 
-    {request.request_date ? 
-        new Date(new Date(request.request_date).getTime() + 3 * 60 * 60 * 1000).toLocaleString('ru-RU', {
-            timeZone: 'Europe/Moscow', // Указываем часовой пояс MSK
-            hour12: false, // Формат времени 24 часа
-        }) :
+                                <strong>Дата:</strong> 
+                                {new Date(request.request_date).getTime() ? 
+        new Date(request.request_date).toLocaleString() :
         'Неверная дата'
     }
-</p>
+                            </p>
 
                         </li>
                     ))
