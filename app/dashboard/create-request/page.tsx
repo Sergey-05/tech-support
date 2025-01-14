@@ -239,7 +239,5 @@ export default function CreatePage() {
     </section>
   );
 }
-// function slugify(name: string): any {
-//     throw new Error('Function not implemented.');
-// }
+
 
