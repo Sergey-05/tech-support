@@ -161,7 +161,7 @@ export default function RequestPage({
                     width={64}
                     height={64}
                     className="object-cover"
-                    onClick={() => handleFileClick(attachment.attachment_path)}
+                    onClick={() => handleFileClick(`https://vkkedsgdpjzsjqjrbbfh.supabase.co/storage/v1/object/public/attachments/${attachment.attachment_path}`)}
                   />
                 </div>
               ) : (
