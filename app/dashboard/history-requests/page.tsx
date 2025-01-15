@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useEffect, useState } from 'react';
 
 export default function HistoryPage() {
@@ -67,7 +68,7 @@ export default function HistoryPage() {
     };
 
     return (
-        <section className="p-8 max-w-screen-xl mx-auto">
+        <section className="p-4 max-w-screen-xl">
             <h2 className="text-3xl font-bold mb-6">История заявок</h2>
 
             <div className="mb-6 flex flex-wrap gap-4">
@@ -102,6 +103,7 @@ export default function HistoryPage() {
                 </select>
 
                 <input
+                    
                     type="date"
                     className="border p-2 rounded-lg w-48"
                     value={startDate || ''}
@@ -121,6 +123,9 @@ export default function HistoryPage() {
                 {Array.isArray(requests) && requests.length > 0 ? (
                     requests.map((request) => (
                         <li key={request.request_id} className="border p-4 rounded-lg shadow-md bg-white hover:bg-gray-100 transition-all duration-200">
+                            <Link
+                            href={`/dashboard/history-requests/${request.request_id}`}>
+                                <div>
                             <h3 className="font-semibold text-lg">{request.request_head}</h3>
                             <p className="text-sm text-gray-600">{request.request_descr}</p>
 
@@ -145,6 +150,9 @@ export default function HistoryPage() {
     }
                             </p>
 
+                            </div>
+                            </Link>
+                            
                         </li>
                     ))
                 ) : (
