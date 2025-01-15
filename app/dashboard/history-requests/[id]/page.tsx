@@ -206,8 +206,8 @@ export default function RequestPage({ params }: { params: Promise<{ id: string }
       <textarea
         value={newComment}
         onChange={(e) => setNewComment(e.target.value)}
-        placeholder="Напишите комментарий"
-        className="w-full p-3 pl-12 border rounded-lg resize-none bg-gray-50 text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
+        placeholder="Сообщение..."
+        className="w-full content-center p-3 pl-12 border rounded-lg resize-none bg-gray-50 text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
       />
       <ChatBubbleLeftRightIcon className="w-6 h-6 text-gray-400 absolute left-3 top-1/2 transform -translate-y-1/2" />
     </div>
@@ -225,7 +225,7 @@ export default function RequestPage({ params }: { params: Promise<{ id: string }
   </div>
 
   {/* Блок загрузки файлов */}
-  <div className="flex flex-col sm:flex-row items-center space-y-2 sm:space-y-0 sm:space-x-4">
+  <div className="flex flex-row sm:flex-row items-center space-y-2 sm:space-y-0 sm:space-x-4">
     <div
       {...getRootProps()}
       className="flex-grow p-6 border-2 border-dashed border-blue-200 rounded-lg text-center cursor-pointer hover:bg-blue-50 transition-colors duration-200"
@@ -233,7 +233,7 @@ export default function RequestPage({ params }: { params: Promise<{ id: string }
       <input {...getInputProps()} />
       <div className="flex items-center justify-center space-x-2">
         <PlusIcon className="w-6 h-6 text-blue-500" />
-        <p className="text-gray-600">Перетащите файлы сюда или нажмите для выбора</p>
+        <p className="text-gray-600">Добавьте файлы для загрузки</p>
       </div>
     </div>
     <button
@@ -251,7 +251,7 @@ export default function RequestPage({ params }: { params: Promise<{ id: string }
 
   {/* Отображение загруженных файлов */}
   {newFiles.length > 0 && (
-    <div className="flex flex-col space-y-2">
+    <div className="flex flex-row space-y-2">
       {newFiles.map((file, idx) => (
         <div key={idx} className="flex items-center space-x-2">
           <p className="text-sm text-gray-600">{file.name}</p>
