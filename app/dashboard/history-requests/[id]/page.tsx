@@ -1,8 +1,11 @@
 'use client';
 
+import "./globals.css";
+
 import { useEffect, useState } from "react";
 import { useDropzone } from "react-dropzone";
 import Modal from 'react-modal';
+import { TailSpin } from 'react-loader-spinner';
 
 type Request = {
   request_head: string;
@@ -23,9 +26,16 @@ export default function RequestPage({ params }: { params: Promise<{ id: string }
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
 
-  useEffect(() => {
-    Modal.setAppElement('body');
-    (async () => {
+
+  const [isLoadingRequest, setIsLoadingRequest] = useState(false);
+const [isLoadingComment, setIsLoadingComment] = useState(false);
+const [isLoadingFiles, setIsLoadingFiles] = useState(false);
+
+useEffect(() => {
+  Modal.setAppElement('body');
+  (async () => {
+    setIsLoadingRequest(true);
+    try {
       const { id } = await params;
       setId(id);
       const response = await fetch(`/api/requests/${id}`);
@@ -34,10 +44,16 @@ export default function RequestPage({ params }: { params: Promise<{ id: string }
         setRequest(data.request);
         setServerAttachments(data.request.attachment || []);
       }
-    })();
-  }, [params]);
+    } finally {
+      setIsLoadingRequest(false);
+    }
+  })();
+}, [params]);
 
-  const handleCommentSubmit = async () => {
+
+const handleCommentSubmit = async () => {
+  setIsLoadingComment(true);
+  try {
     const response = await fetch(`/api/requests/${id}/comments`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -46,31 +62,36 @@ export default function RequestPage({ params }: { params: Promise<{ id: string }
     if (response.ok) {
       const comment = await response.json();
       setRequest((prev) => {
-        if (!prev) return null; // Если предыдущего значения нет, возвращаем null
-        return {
-          ...prev,
-          comment: [...(prev.comment || []), comment],
-        };
+        if (!prev) return null;
+        return { ...prev, comment: [...(prev.comment || []), comment] };
       });
       setNewComment('');
     }
-  };
+  } finally {
+    setIsLoadingComment(false);
+  }
+};
 
-  const handleFileUpload = async () => {
+
+const handleFileUpload = async () => {
+  setIsLoadingFiles(true);
+  try {
     const formData = new FormData();
     newFiles.forEach((file) => formData.append('files', file));
-
     const response = await fetch(`/api/requests/${id}/attachments`, {
       method: 'POST',
       body: formData,
     });
-
     if (response.ok) {
       const data = await response.json();
       setServerAttachments((prev) => [...prev, ...data.attachments]);
       setNewFiles([]);
     }
-  };
+  } finally {
+    setIsLoadingFiles(false);
+  }
+};
+
 
   const { getRootProps, getInputProps } = useDropzone({
     onDrop: (acceptedFiles) => setNewFiles((prev) => [...prev, ...acceptedFiles]),
@@ -88,27 +109,39 @@ export default function RequestPage({ params }: { params: Promise<{ id: string }
   };
 
   return (
-    <div className="container mx-auto p-6">
+    <div className="container p-6">
+      {isLoadingRequest && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <TailSpin height="80" width="80" color="#4fa94d" />
+        </div>
+      )}
       <h1 className="text-3xl font-bold">{request?.request_head}</h1>
       <p>{request?.request_descr}</p>
 
       <h2 className="text-2xl mt-6">Комментарии</h2>
       {request?.comment?.map((comment) => (
-        <div key={comment.comment_id} className="p-4 border rounded mt-2">
-          <p>{comment.comment_text}</p>
-          <span className="text-gray-500 text-sm">
-            {new Date(comment.comment_time).toLocaleString()}
-          </span>
-        </div>
-      ))}
+  <div key={comment.comment_id} className="comment-card">
+    <p className="comment-text">{comment.comment_text}</p>
+    <span className="comment-date">
+      {new Date(comment.comment_time).toLocaleString()}
+    </span>
+  </div>
+))}
+
+
       <textarea
         value={newComment}
         onChange={(e) => setNewComment(e.target.value)}
         placeholder="Напишите комментарий"
         className="w-full p-2 border rounded mt-4"
       />
-      <button onClick={handleCommentSubmit} className="mt-2 bg-blue-600 text-white px-4 py-2 rounded">
-        Отправить
+      <button
+        onClick={handleCommentSubmit}
+        className="mt-2 bg-blue-600 text-white px-4 py-2 rounded flex items-center justify-center"
+        disabled={isLoadingComment}
+      >
+        {isLoadingComment && <TailSpin height="20" width="20" color="#fff" />}
+        {!isLoadingComment && 'Отправить'}
       </button>
 
       <h2 className="text-2xl mt-6">Вложения</h2>
@@ -153,8 +186,13 @@ export default function RequestPage({ params }: { params: Promise<{ id: string }
           {file.name}
         </p>
       ))}
-      <button onClick={handleFileUpload} className="mt-4 bg-green-600 text-white px-4 py-2 rounded">
-        Загрузить файлы
+      <button
+        onClick={handleFileUpload}
+        className="mt-4 bg-green-600 text-white px-4 py-2 rounded flex items-center justify-center"
+        disabled={isLoadingFiles}
+      >
+        {isLoadingFiles && <TailSpin height="20" width="20" color="#fff" />}
+        {!isLoadingFiles && 'Загрузить файлы'}
       </button>
     </div>
   );

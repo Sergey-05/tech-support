@@ -20,3 +20,30 @@ body {
   font-family: Arial, Helvetica, sans-serif;
 }
 
+
+
+.comment-card {
+  background: linear-gradient(to right, #f9f9f9, #ffffff);
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 12px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.comment-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 8px rgba(0, 0, 0, 0.15);
+}
+
+.comment-text {
+  font-size: 1rem;
+  color: #374151;
+}
+
+.comment-date {
+  font-size: 0.875rem;
+  color: #6b7280;
+}
+
