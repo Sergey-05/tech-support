@@ -9,7 +9,7 @@ type Request = {
   request_descr: string;
   request_date: string;
   attachment: { name: string; url: string }[];
-  comment: { comment_id: string; comment_text: string; comment_time: string }[];
+  comment: { comment_id: string; comment_text: string; comment_time: Date }[];
 };
 
 export default function RequestPage({ params }: { params: Promise<{ id: string }> }) {

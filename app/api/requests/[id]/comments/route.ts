@@ -21,8 +21,7 @@ export async function POST(
     const { data, error } = await supabase
         .from('comment')
         .insert([{ request_id: id, comment_text, comment_time: new Date().toISOString() }])
-        .select('*')
-        .single();
+        .select('*');
 
     if (error) {
         return NextResponse.json({ error: error.message }, { status: 500 });
