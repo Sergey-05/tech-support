@@ -213,7 +213,7 @@ export default function RequestPage({ params }: { params: Promise<{ id: string }
     </div>
     <button
       onClick={handleCommentSubmit}
-      className="flex items-center justify-center bg-blue-600 text-white p-3 rounded-full hover:bg-blue-700 disabled:opacity-50 sm:w-12 sm:h-12"
+      className="ml-3 flex items-center justify-center bg-blue-600 text-white p-3 rounded-full hover:bg-blue-700 disabled:opacity-50 sm:w-12 sm:h-12"
       disabled={isLoadingComment}
     >
       {isLoadingComment ? (
@@ -238,7 +238,7 @@ export default function RequestPage({ params }: { params: Promise<{ id: string }
     </div>
     <button
       onClick={handleFileUpload}
-      className="flex items-center justify-center bg-green-600 text-white p-3 rounded-full hover:bg-green-700 disabled:opacity-50 sm:w-12 sm:h-12"
+      className="ml-3 flex items-center justify-center bg-green-600 text-white p-3 rounded-full hover:bg-green-700 disabled:opacity-50 sm:w-12 sm:h-12"
       disabled={isLoadingFiles}
     >
       {isLoadingFiles ? (
