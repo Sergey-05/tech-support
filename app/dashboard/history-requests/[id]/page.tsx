@@ -154,7 +154,7 @@ export default function RequestPage({ params }: { params: Promise<{ id: string }
   });
 
   return (
-    <div className="p-6 flex flex-col h-full">
+    <div className="p-2 flex flex-col h-full">
       {isLoadingRequest && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <TailSpin height="80" width="80" color="#4fa94d" />
@@ -201,7 +201,7 @@ export default function RequestPage({ params }: { params: Promise<{ id: string }
 
 <div className="flex flex-col space-y-4 mt-4">
   {/* Блок комментариев */}
-  <div className="flex flex-col sm:flex-row items-center space-y-2 sm:space-y-0 sm:space-x-4">
+  <div className="flex flex-row sm:flex-row items-center space-y-2 sm:space-y-0 sm:space-x-4">
     <div className="relative flex-grow">
       <textarea
         value={newComment}
