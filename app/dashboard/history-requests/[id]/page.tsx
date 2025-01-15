@@ -1,6 +1,6 @@
 'use client';
 
-import "./globals.css";
+import "../../../.global.css";
 
 import { useEffect, useState } from "react";
 import { useDropzone } from "react-dropzone";
