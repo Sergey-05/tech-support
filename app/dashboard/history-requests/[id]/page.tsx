@@ -1,114 +1,160 @@
+
+
 'use client';
-
-
-import { useEffect, useState } from "react";
-import { useDropzone } from "react-dropzone";
-import Modal from 'react-modal';
+import { useEffect, useState } from 'react';
+import { useDropzone } from 'react-dropzone';
+import { getUserId, getUserDetails } from '@/app/utils/supabase/user';
 import { TailSpin } from 'react-loader-spinner';
 
-type Request = {
+import { ChatBubbleLeftRightIcon, PaperAirplaneIcon, PlusIcon, XMarkIcon } from '@heroicons/react/24/solid';
+
+import { ChatMessage } from '@/app/ui/client-components/ChatMessage';
+
+interface Attachment {
+  attachment_id: string;
+  attachment_name: string;
+  attachment_path: string;
+  attachment_uploaded_by: User; // user_id
+  attachment_uploaded_at: string;
+};
+
+interface Comment {
+  comment_id: string;
+  comment_text: string;
+  comment_time: string;
+  comment_sent_by: User; // user_id
+};
+
+interface Request {
+  request_id: string;
   request_head: string;
   request_descr: string;
   request_date: string;
-  attachment: { name: string; url: string }[];
-  comment: { comment_id: string; comment_text: string; comment_time: Date }[];
+  request_status: string;
+  attachment: Attachment[];
+  comment: Comment[];
 };
+
+interface User {
+  user_id: string;
+  user_fullname: string;
+  // Добавьте другие поля, если необходимо
+}
+
+
 
 export default function RequestPage({ params }: { params: Promise<{ id: string }> }) {
   const [id, setId] = useState<string>('');
   const [request, setRequest] = useState<Request | null>(null);
-  const [serverAttachments, setServerAttachments] = useState<
-    { attachment_id: string; attachment_name: string; attachment_path: string }[]
-  >([]);
-  const [newComment, setNewComment] = useState('');
+  const [currentUserId, setCurrentUserId] = useState<string>('');
+  const [currentUserDetails, setCurrentUserDetails] = useState<any>(null);
+  const [users, setUsers] = useState<{ [key: string]: { user_fullname: string } }>({});
+  const [newComment, setNewComment] = useState<string>('');
   const [newFiles, setNewFiles] = useState<File[]>([]);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [selectedImage, setSelectedImage] = useState<string | null>(null);
-
 
   const [isLoadingRequest, setIsLoadingRequest] = useState(false);
-const [isLoadingComment, setIsLoadingComment] = useState(false);
-const [isLoadingFiles, setIsLoadingFiles] = useState(false);
+  const [isLoadingComment, setIsLoadingComment] = useState(false);
+  const [isLoadingFiles, setIsLoadingFiles] = useState(false);
 
-useEffect(() => {
-  Modal.setAppElement('body');
-  (async () => {
-    setIsLoadingRequest(true);
+  useEffect(() => {
+    (async () => {
+      setIsLoadingRequest(true);
+      try {
+        const userId = await getUserId();
+        setCurrentUserId(userId);
+        const userDetails = await getUserDetails(userId);
+        setCurrentUserDetails(userDetails);
+        const { id } = await params;
+        setId(id);
+        const response = await fetch(`/api/requests/${id}`);
+        if (response.ok) {
+          const data = await response.json();
+          setRequest(data.request);
+
+          // Создаем Set для хранения уникальных user_id
+          const userIdsSet = new Set<string>();
+
+          // Добавляем user_id из вложений
+          data.request.attachment.forEach((attachment: Attachment) => {
+            userIdsSet.add(attachment.attachment_uploaded_by.user_id);
+          });
+
+          // Добавляем user_id из комментариев
+          data.request.comment.forEach((comment: Comment) => {
+            userIdsSet.add(comment.comment_sent_by.user_id);
+          });
+
+          // Преобразуем Set в массив уникальных user_id
+          const uniqueUserIds = Array.from(userIdsSet);
+
+          const usersData = await Promise.all(
+            Array.from(uniqueUserIds).map((userId) => getUserDetails(userId))
+          );
+          const usersObj: { [key: string]: User } = {};
+          usersData.forEach((user) => {
+            usersObj[user.user_id] = { user_id: user.user_id, user_fullname: user.user_fullname };
+          });
+          setUsers(usersObj);
+        }
+      } catch (error) {
+        console.error(error);
+      } finally {
+        setIsLoadingRequest(false);
+      }
+    })();
+  }, [params]);
+
+  const handleCommentSubmit = async () => {
+    setIsLoadingComment(true);
     try {
-      const { id } = await params;
-      setId(id);
-      const response = await fetch(`/api/requests/${id}`);
+      const response = await fetch(`/api/requests/${id}/comments`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ comment_text: newComment, comment_sent_by: currentUserId }),
+      });
       if (response.ok) {
-        const data = await response.json();
-        setRequest(data.request);
-        setServerAttachments(data.request.attachment || []);
+        const comment: Comment = await response.json();
+        setRequest((prev) => {
+          if (!prev) return null;
+          return { ...prev, comment: [...(prev.comment || []), comment] };
+        });
+        setNewComment('');
       }
     } finally {
-      setIsLoadingRequest(false);
+      setIsLoadingComment(false);
     }
-  })();
-}, [params]);
+  };
 
-
-const handleCommentSubmit = async () => {
-  setIsLoadingComment(true);
-  try {
-    const response = await fetch(`/api/requests/${id}/comments`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ comment_text: newComment }),
-    });
-    if (response.ok) {
-      const comment = await response.json();
-      setRequest((prev) => {
-        if (!prev) return null;
-        return { ...prev, comment: [...(prev.comment || []), comment] };
+  const handleFileUpload = async () => {
+    setIsLoadingFiles(true);
+    try {
+      const formData = new FormData();
+      newFiles.forEach((file) => formData.append('files', file));
+      formData.append('user_id', currentUserId);
+      const response = await fetch(`/api/requests/${id}/attachments`, {
+        method: 'POST',
+        body: formData,
       });
-      setNewComment('');
+      if (response.ok) {
+        const data = await response.json();
+        setRequest((prev) => {
+          if (!prev) return null;
+          return { ...prev, attachment: [...(prev.attachment || []), ...data.attachments] };
+        });
+        setNewFiles([]);
+      }
+    } finally {
+      setIsLoadingFiles(false);
     }
-  } finally {
-    setIsLoadingComment(false);
-  }
-};
-
-
-const handleFileUpload = async () => {
-  setIsLoadingFiles(true);
-  try {
-    const formData = new FormData();
-    newFiles.forEach((file) => formData.append('files', file));
-    const response = await fetch(`/api/requests/${id}/attachments`, {
-      method: 'POST',
-      body: formData,
-    });
-    if (response.ok) {
-      const data = await response.json();
-      setServerAttachments((prev) => [...prev, ...data.attachments]);
-      setNewFiles([]);
-    }
-  } finally {
-    setIsLoadingFiles(false);
-  }
-};
-
+  };
 
   const { getRootProps, getInputProps } = useDropzone({
     onDrop: (acceptedFiles) => setNewFiles((prev) => [...prev, ...acceptedFiles]),
     multiple: true,
   });
 
-  const openImageModal = (url: string) => {
-    setSelectedImage(url);
-    setIsModalOpen(true);
-  };
-
-  const closeModal = () => {
-    setIsModalOpen(false);
-    setSelectedImage(null);
-  };
-
   return (
-    <div className="container p-6">
+    <div className="p-6 flex flex-col h-full">
       {isLoadingRequest && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <TailSpin height="80" width="80" color="#4fa94d" />
@@ -117,82 +163,111 @@ const handleFileUpload = async () => {
       <h1 className="text-3xl font-bold">{request?.request_head}</h1>
       <p>{request?.request_descr}</p>
 
-      <h2 className="text-2xl mt-6">Комментарии</h2>
-      {request?.comment?.map((comment) => (
-  <div key={comment.comment_id} className="comment-card">
-    <p className="comment-text">{comment.comment_text}</p>
-    <span className="comment-date">
-      {new Date(comment.comment_time).toLocaleString()}
-    </span>
-  </div>
-))}
+      <h2 className="overflow-y-hidden text-2xl mt-6">Чат</h2>
+      <div className="flex flex-col chat-container">
+  {request?.comment?.map((comment) => (
+    <ChatMessage
+      key={comment.comment_id}
+      message={{
+        type: 'comment',
+        content: comment.comment_text,
+        timestamp: new Date(comment.comment_time).toLocaleString(),
+        user_id: comment.comment_sent_by.user_id,
+        url: undefined,
+        fileType: undefined,
+      }}
+      currentUserId={currentUserId}
+      users={users}
+    />
+  ))}
+  {request?.attachment?.map((attachment) => (
+    <ChatMessage
+      key={attachment.attachment_id}
+      message={{
+        type: 'attachment',
+        content: attachment.attachment_name,
+        timestamp: new Date(attachment.attachment_uploaded_at).toLocaleString(),
+        user_id: attachment.attachment_uploaded_by.user_id,
+        url: `https://vkkedsgdpjzsjqjrbbfh.supabase.co/storage/v1/object/public/attachments/${attachment.attachment_path}`,
+        fileType: 'image',
+      }}
+      currentUserId={currentUserId}
+      users={users}
+    />
+  ))}
+</div>
 
 
+
+<div className="flex flex-col space-y-4 mt-4">
+  {/* Блок комментариев */}
+  <div className="flex items-center space-x-4">
+    <div className="relative flex-grow">
       <textarea
         value={newComment}
         onChange={(e) => setNewComment(e.target.value)}
         placeholder="Напишите комментарий"
-        className="w-full p-2 border rounded mt-4"
+        className="w-full p-3 pl-12 border rounded-lg resize-none bg-gray-50 text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
       />
-      <button
-        onClick={handleCommentSubmit}
-        className="mt-2 bg-blue-600 text-white px-4 py-2 rounded flex items-center justify-center"
-        disabled={isLoadingComment}
-      >
-        {isLoadingComment && <TailSpin height="20" width="20" color="#fff" />}
-        {!isLoadingComment && 'Отправить'}
-      </button>
+      <ChatBubbleLeftRightIcon className="w-6 h-6 text-gray-400 absolute left-3 top-1/2 transform -translate-y-1/2" />
+    </div>
+    <button
+      onClick={handleCommentSubmit}
+      className="flex items-center justify-center bg-blue-600 text-white p-3 rounded-full hover:bg-blue-700 disabled:opacity-50"
+      disabled={isLoadingComment}
+    >
+      {isLoadingComment ? (
+        <TailSpin height="20" width="20" color="#fff" />
+      ) : (
+        <PaperAirplaneIcon className="w-5 h-5" />
+      )}
+    </button>
+  </div>
 
-      <h2 className="text-2xl mt-6">Вложения</h2>
-      <div className="grid grid-cols-2 gap-4">
-        {serverAttachments.map((attachment) => (
-          <div key={attachment.attachment_id} className="relative group">
-            <img
-              src={`https://vkkedsgdpjzsjqjrbbfh.supabase.co/storage/v1/object/public/attachments/${attachment.attachment_path}`}
-              alt={attachment.attachment_name}
-              className="cursor-pointer rounded shadow"
-              onClick={() =>
-                openImageModal(
-                  `https://vkkedsgdpjzsjqjrbbfh.supabase.co/storage/v1/object/public/attachments/${attachment.attachment_path}`
-                )
-              }
-            />
-          </div>
-        ))}
+  {/* Блок загрузки файлов */}
+  <div className="flex items-center space-x-4">
+    <div
+      {...getRootProps()}
+      className="flex-grow p-6 border-2 border-dashed border-blue-200 rounded-lg text-center cursor-pointer hover:bg-blue-50 transition-colors duration-200"
+    >
+      <input {...getInputProps()} />
+      <div className="flex items-center justify-center space-x-2">
+        <PlusIcon className="w-6 h-6 text-blue-500" />
+        <p className="text-gray-600">Перетащите файлы сюда или нажмите для выбора</p>
       </div>
+    </div>
+    <button
+      onClick={handleFileUpload}
+      className="flex items-center justify-center bg-green-600 text-white p-3 rounded-full hover:bg-green-700 disabled:opacity-50"
+      disabled={isLoadingFiles}
+    >
+      {isLoadingFiles ? (
+        <TailSpin height="20" width="20" color="#fff" />
+      ) : (
+        <PlusIcon className="w-5 h-5" />
+      )}
+    </button>
+  </div>
 
-      <Modal
-        isOpen={isModalOpen}
-        onRequestClose={closeModal}
-        overlayClassName="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center"
-        className="bg-white p-4 rounded shadow-md relative max-w-lg mx-auto"
-      >
-        {selectedImage && <img src={selectedImage} alt="Просмотр" className="w-full h-auto" />}
-        <button
-          onClick={closeModal}
-          className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-2"
-        >
-          ×
-        </button>
-      </Modal>
-
-      <div {...getRootProps()} className="mt-4 p-6 border-dashed border-2 border-gray-300 rounded text-center">
-        <input {...getInputProps()} />
-        <p>Перетащите файлы сюда или нажмите для выбора</p>
-      </div>
+  {/* Отображение загруженных файлов */}
+  {newFiles.length > 0 && (
+    <div className="flex flex-col space-y-2">
       {newFiles.map((file, idx) => (
-        <p key={idx} className="mt-2">
-          {file.name}
-        </p>
+        <div key={idx} className="flex items-center space-x-2">
+          <p className="text-sm text-gray-600">{file.name}</p>
+          <button
+            onClick={() => setNewFiles((prev) => prev.filter((f) => f.name !== file.name))}
+            className="text-red-500 hover:text-red-700 focus:outline-none"
+          >
+            <XMarkIcon className="w-4 h-4" />
+          </button>
+        </div>
       ))}
-      <button
-        onClick={handleFileUpload}
-        className="mt-4 bg-green-600 text-white px-4 py-2 rounded flex items-center justify-center"
-        disabled={isLoadingFiles}
-      >
-        {isLoadingFiles && <TailSpin height="20" width="20" color="#fff" />}
-        {!isLoadingFiles && 'Загрузить файлы'}
-      </button>
+    </div>
+  )}
+</div>
+
+
     </div>
   );
 }

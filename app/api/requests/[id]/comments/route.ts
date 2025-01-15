@@ -10,7 +10,7 @@ export async function POST(
     // Ожидаем разрешения params
     const { id } = await params;
 
-    const { comment_text } = await req.json();
+    const { comment_text, comment_sent_by } = await req.json();
 
     if (!id || !comment_text) {
         return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
@@ -20,8 +20,8 @@ export async function POST(
 
     const { data, error } = await supabase
   .from('comment')
-  .insert([{ request_id: id, comment_text, comment_time: new Date().toISOString() }])
-  .select('comment_id, comment_text, comment_time');
+  .insert([{ request_id: id, comment_text, comment_time: new Date().toISOString(), comment_sent_by }])
+  .select('comment_id, comment_text, comment_time, comment_sent_by');
 
 
     if (error) {

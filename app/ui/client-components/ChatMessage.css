@@ -1,0 +1,28 @@
+
+  
+  /* Стили для вложений */
+  .attachment-video,
+  .attachment-audio,
+  .attachment-document {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  .attachment-document a {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+  
+
+
+  .chat-container {
+    max-height: 400px; /* Устанавливаем максимальную высоту контейнера */
+    overflow-y: auto; /* Включаем прокрутку, когда контент превышает высоту */
+  }
+  
+  .chat-container::-webkit-scrollbar {
+    display: none; /* Скрываем полосу прокрутки */
+  }
+  
