@@ -154,7 +154,7 @@ export default function RequestPage({ params }: { params: Promise<{ id: string }
   });
 
   return (
-    <div className="p-2 flex flex-col h-full">
+    <div className="flex flex-col h-full">
       {isLoadingRequest && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <TailSpin height="80" width="80" color="#4fa94d" />
