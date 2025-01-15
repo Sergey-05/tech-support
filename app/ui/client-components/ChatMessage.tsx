@@ -1,4 +1,3 @@
-// components/ChatMessage.tsx
 import React, { useState, useEffect } from 'react';
 import { ImageLightbox } from './ImageLightBox';
 import ReactPlayer from 'react-player';
@@ -57,24 +56,37 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({ message, currentUserId
   const [attachmentType, setAttachmentType] = useState<string | undefined>(message.fileType);
 
   useEffect(() => {
+    if(message.user_id){
+      console.log('useEffect triggered for message:', message);
     if (users && users[message.user_id]) {
       setUserData(users[message.user_id]);
+      console.log('User data set:', users[message.user_id]);
+    } else {
+      console.warn(`User data for user_id ${message.user_id} not found`);
     }
+
     if (message.url) {
       setAttachmentUrl(message.url);
+      console.log('Attachment URL set:', message.url);
     }
+
     if (message.fileType) {
-        const attachmentType = getAttachmentType(message.fileType);
+      const attachmentType = getAttachmentType(message.fileType);
       setAttachmentType(attachmentType);
+      console.log('Attachment type set:', attachmentType);
     }
+    }
+    
   }, [message, users]);
 
   if (!userData) {
+    console.warn('User data is missing, returning null.');
     return null;
   }
 
   const isSender = message.user_id === currentUserId;
   const initials = getInitials(userData.user_fullname);
+  console.log(`Rendering message from user ${message.user_id} (${initials})`);
 
   const renderAttachment = () => {
     if (!attachmentUrl) {
@@ -83,31 +95,36 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({ message, currentUserId
     }
 
     const attachmentTypeFile = getAttachmentType(attachmentUrl);
+    console.log('Rendering attachment type:', attachmentTypeFile);
 
     switch (attachmentTypeFile) {
       case 'video':
+        console.log('Rendering video attachment');
         return (
           <div className="attachment-video">
-            <ReactPlayer url={attachmentUrl} controls width="100%" />
+            <ReactPlayer url={message.url} controls width="100%" />
           </div>
         );
       case 'audio':
+        console.log('Rendering audio attachment');
         return (
           <div className="attachment-audio">
-            <AudioPlayer src={attachmentUrl} />
+            <AudioPlayer src={message.url} />
           </div>
         );
       case 'document':
+        console.log('Rendering document attachment');
         return (
           <div className="attachment-document">
-            <a href={attachmentUrl} target="_blank" rel="noopener noreferrer">
+            <a href={message.url} target="_blank" rel="noopener noreferrer">
               <DocumentArrowDownIcon className="w-20 h-20 object-cover" />
             </a>
             <p className="text-sm text-gray-600">{message.content}</p>
           </div>
         );
       default:
-        return <ImageLightbox url={attachmentUrl} alt={message.content} />;
+        console.log('Rendering image attachment');
+        return <ImageLightbox url={message.url} alt={message.content} />;
     }
   };
 

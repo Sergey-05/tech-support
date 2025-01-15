@@ -62,31 +62,31 @@ export default function RequestPage({ params }: { params: Promise<{ id: string }
       try {
         const userId = await getUserId();
         setCurrentUserId(userId);
+        
         const userDetails = await getUserDetails(userId);
         setCurrentUserDetails(userDetails);
+  
         const { id } = await params;
         setId(id);
+  
         const response = await fetch(`/api/requests/${id}`);
         if (response.ok) {
           const data = await response.json();
+  
           setRequest(data.request);
-
+  
           // Создаем Set для хранения уникальных user_id
           const userIdsSet = new Set<string>();
-
-          // Добавляем user_id из вложений
+  
           data.request.attachment.forEach((attachment: Attachment) => {
             userIdsSet.add(attachment.attachment_uploaded_by.user_id);
           });
-
-          // Добавляем user_id из комментариев
           data.request.comment.forEach((comment: Comment) => {
             userIdsSet.add(comment.comment_sent_by.user_id);
           });
-
-          // Преобразуем Set в массив уникальных user_id
+  
           const uniqueUserIds = Array.from(userIdsSet);
-
+  
           const usersData = await Promise.all(
             Array.from(uniqueUserIds).map((userId) => getUserDetails(userId))
           );
@@ -103,6 +103,7 @@ export default function RequestPage({ params }: { params: Promise<{ id: string }
       }
     })();
   }, [params]);
+  
 
   const handleCommentSubmit = async () => {
     setIsLoadingComment(true);
@@ -112,14 +113,46 @@ export default function RequestPage({ params }: { params: Promise<{ id: string }
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ comment_text: newComment, comment_sent_by: currentUserId }),
       });
+      
+      
+      
       if (response.ok) {
-        const comment: Comment = await response.json();
-        setRequest((prev) => {
-          if (!prev) return null;
-          return { ...prev, comment: [...(prev.comment || []), comment] };
-        });
+        const commentData = await response.json();
+console.log('Комментарий успешно добавлен:', commentData);
+
+setRequest((prev) => {
+  try {
+    console.log("Состояние request до обновления:", prev);
+
+    if (!prev || !commentData || !commentData.comment) {
+      console.log("Предыдущее состояние пустое или данные комментария отсутствуют.");
+      return prev;
+    }
+
+    // Обновляем комментарии, распаковывая их из полученных данных
+    const updatedRequest = { 
+      ...prev, 
+      comment: [...(prev.comment || []), ...commentData.comment] 
+    };
+
+    console.log("Состояние request после обновления:", updatedRequest);
+
+    return updatedRequest;
+  } catch (error) {
+    console.error("Произошла ошибка при обновлении состояния request:", error);
+    return prev; // В случае ошибки возвращаем предыдущее состояние
+  }
+});
+
+      
         setNewComment('');
+      } else {
+        console.error('Ошибка при добавлении комментария:', response.status, response.statusText);
+        const errorMessage = await response.text();
+        console.error('Ошибка от сервера:', errorMessage);
       }
+      
+      
     } finally {
       setIsLoadingComment(false);
     }
@@ -165,21 +198,23 @@ export default function RequestPage({ params }: { params: Promise<{ id: string }
 
       <h2 className="overflow-y-hidden text-2xl mt-6">Чат</h2>
       <div className="flex flex-col chat-container">
-  {request?.comment?.map((comment) => (
-    <ChatMessage
-      key={comment.comment_id}
-      message={{
-        type: 'comment',
-        content: comment.comment_text,
-        timestamp: new Date(comment.comment_time).toLocaleString(),
-        user_id: comment.comment_sent_by.user_id,
-        url: undefined,
-        fileType: undefined,
-      }}
-      currentUserId={currentUserId}
-      users={users}
-    />
-  ))}
+      {request?.comment?.map((comment) => (
+  <ChatMessage
+    key={comment.comment_id}
+    message={{
+      type: 'comment',
+      content: comment.comment_text,
+      timestamp: new Date(comment.comment_time).toLocaleString(),
+      user_id: typeof comment.comment_sent_by === 'object' 
+        ? comment.comment_sent_by.user_id 
+        : comment.comment_sent_by, // Учитываем случай, если comment_sent_by — это число
+      url: undefined,
+      fileType: undefined,
+    }}
+    currentUserId={currentUserId}
+    users={users}
+  />
+))}
   {request?.attachment?.map((attachment) => (
     <ChatMessage
       key={attachment.attachment_id}
@@ -187,7 +222,9 @@ export default function RequestPage({ params }: { params: Promise<{ id: string }
         type: 'attachment',
         content: attachment.attachment_name,
         timestamp: new Date(attachment.attachment_uploaded_at).toLocaleString(),
-        user_id: attachment.attachment_uploaded_by.user_id,
+        user_id: typeof attachment.attachment_uploaded_by === 'object' 
+        ? attachment.attachment_uploaded_by.user_id 
+        : attachment.attachment_uploaded_by, // Учитываем случай, если comment_sent_by — это число
         url: `https://vkkedsgdpjzsjqjrbbfh.supabase.co/storage/v1/object/public/attachments/${attachment.attachment_path}`,
         fileType: 'image',
       }}
