@@ -31,7 +31,7 @@ export default function RequestsPage() {
     ) => {
         try {
             const body = { action };
-            const response = await fetch(`/api/requests/${requestId}`, {
+            const response = await fetch(`/api/admin/${requestId}`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(body),

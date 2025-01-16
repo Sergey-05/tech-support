@@ -2,7 +2,7 @@ import { createClient } from '../../utils/supabase/server';
 import { NextResponse } from 'next/server';
 import { getUserId } from '@/app/utils/supabase/user';
 
-export async function GET(req: Response) {
+export async function GET(req: Request) {
     const supabase = await createClient();
 
     const user = await getUserId();
