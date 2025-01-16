@@ -2,7 +2,10 @@ import { createClient } from '@/app/utils/supabase/server';
 import { NextResponse } from 'next/server';
 import { getUserId } from '@/app/utils/supabase/user';
 
-export async function POST(req: Request, { params }: { params: { id: string } }) {
+export async function POST(
+    req: Request,
+    { params }: { params: Promise<{ id: string }> }
+  ) {
     const supabase = await createClient();
     const user = await getUserId();
 
@@ -10,7 +13,7 @@ export async function POST(req: Request, { params }: { params: { id: string } })
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { id } = params;
+    const { id } = await params;
     const { action } = await req.json();
     const now = new Date().toISOString();
 
