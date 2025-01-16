@@ -63,55 +63,60 @@ export default function RequestsPage() {
                             key={request.request_id}
                             className="border p-4 rounded-lg shadow-md bg-white hover:bg-gray-100 transition-all duration-200"
                         >
-                            <div>
-                                <h3 className="font-semibold text-lg">{request.request_head}</h3>
-                                <p className="text-sm text-gray-600">{request.request_descr}</p>
+                            <Link href={`/dashboard/admin/${request.request_id}`}>
+                                <a className="block">
+                                    <div>
+                                        <h3 className="font-semibold text-lg">{request.request_head}</h3>
+                                        <p className="text-sm text-gray-600">{request.request_descr}</p>
 
-                                <p className="text-sm text-gray-500 mt-2">
-                                    <strong>Категория:</strong> {request.category?.category_name || 'Не указана'}
-                                </p>
+                                        <p className="text-sm text-gray-500 mt-2">
+                                            <strong>Категория:</strong> {request.category?.category_name || 'Не указана'}
+                                        </p>
 
-                                <p className="text-sm text-gray-500 mt-2">
-                                    <strong>Создатель:</strong> {request.user?.user_fullname} (
-                                    {request.user?.user_email})
-                                </p>
+                                        <p className="text-sm text-gray-500 mt-2">
+                                            <strong>Создатель:</strong> {request.user?.user_fullname} (
+                                            {request.user?.user_email})
+                                        </p>
 
-                                <p className="text-sm text-gray-500 mt-2">
-                                    <strong>Дата:</strong>{' '}
-                                    {new Date(request.request_date).toLocaleString() || 'Не указана'}
-                                </p>
+                                        <p className="text-sm text-gray-500 mt-2">
+                                            <strong>Дата:</strong>{' '}
+                                            {new Date(request.request_date).toLocaleString() || 'Не указана'}
+                                        </p>
 
-                                <p className="text-sm text-gray-500 mt-2">
-                                    <strong>Оставшееся время:</strong> {request.request_time_left || 'Не указано'}
-                                </p>
+                                        <p className="text-sm text-gray-500 mt-2">
+                                            <strong>Крайний срок выполнения:</strong>{' '}
+                                            {new Date(request.request_time_left).toLocaleString() || 'Не указано'}
+                                        </p>
+                                    </div>
+                                </a>
+                            </Link>
 
-                                <div className="mt-4 flex space-x-2">
-                                    {request.request_status === 'new' && (
+                            <div className="mt-4 flex space-x-2">
+                                {request.request_status === 'new' && (
+                                    <button
+                                        onClick={() => handleRequestAction(request.request_id, 'accept')}
+                                        className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600"
+                                    >
+                                        Принять
+                                    </button>
+                                )}
+
+                                {request.request_status === 'in_process' && (
+                                    <>
                                         <button
-                                            onClick={() => handleRequestAction(request.request_id, 'accept')}
-                                            className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600"
+                                            onClick={() => handleRequestAction(request.request_id, 'reject')}
+                                            className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600"
                                         >
-                                            Принять
+                                            Отклонить
                                         </button>
-                                    )}
-
-                                    {request.request_status === 'in_process' && (
-                                        <>
-                                            <button
-                                                onClick={() => handleRequestAction(request.request_id, 'reject')}
-                                                className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600"
-                                            >
-                                                Отклонить
-                                            </button>
-                                            <button
-                                                onClick={() => handleRequestAction(request.request_id, 'complete')}
-                                                className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
-                                            >
-                                                Завершить
-                                            </button>
-                                        </>
-                                    )}
-                                </div>
+                                        <button
+                                            onClick={() => handleRequestAction(request.request_id, 'complete')}
+                                            className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+                                        >
+                                            Завершить
+                                        </button>
+                                    </>
+                                )}
                             </div>
                         </li>
                     ))
