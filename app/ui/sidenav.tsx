@@ -8,6 +8,7 @@ import { PowerIcon } from '@heroicons/react/24/outline';
 import { useEffect, useState } from 'react';
 import AdminNavLinks from './admin-nav-links';
 import { getUserDetails, getUserId } from '../utils/supabase/user';
+import { logout } from '../lib/actions';
 
 export default function SideNav() {
   const [userRole, setUserRole] = useState<string | null>(null);
@@ -31,21 +32,6 @@ export default function SideNav() {
     fetchUserData();
   }, []);
 
-  const handleLogout = async () => {
-    try {
-      const response = await fetch('/api/logout', {
-        method: 'POST',
-      });
-
-      if (!response.ok) {
-        throw new Error('Logout failed');
-      }
-
-      // Здесь вы можете добавить логику для перенаправления пользователя на страницу входа
-    } catch (error) {
-      console.error('Error logging out', error);
-    }
-  };
 
   return (
     <div className="flex h-full flex-col px-3 py-4 md:px-2">
@@ -60,12 +46,8 @@ export default function SideNav() {
       <div className="flex grow flex-row justify-between space-x-2 md:flex-col md:space-x-0 md:space-y-2">
         {userRole == 'admin' ? <AdminNavLinks /> : <NavLinks />}
         <div className="hidden h-auto w-full grow rounded-md bg-gray-50 md:block"></div>
-        <form
-          onSubmit={async (e) => {
-            e.preventDefault();
-            await handleLogout();
-          }}
-        >
+        <form action={logout}>
+
           <button
             type="submit"
             className="flex h-[48px] w-full grow items-center justify-center gap-2 rounded-md bg-gray-50 p-3 text-sm font-medium hover:bg-sky-100 hover:text-blue-600 md:flex-none md:justify-start md:p-2 md:px-3"
