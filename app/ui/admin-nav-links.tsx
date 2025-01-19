@@ -1,6 +1,6 @@
 "use client";
 
-import { Home, History, Create, Logout} from '@mui/icons-material';
+import { Home, History} from '@mui/icons-material';
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -17,9 +17,6 @@ const links = [
     href: '/dashboard/admin/reports',
     icon: History,
   },
-  { name: 'Статистика', 
-    href: '/dashboard/admin/statistics', 
-    icon: Create },
 ];
 
 export default function AdminNavLinks() {

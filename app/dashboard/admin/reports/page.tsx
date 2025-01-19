@@ -722,7 +722,7 @@ const generateRequestStatusPercentage = (data: any) => {
 
 
 return (
-  <div className="p-6">
+  <div className="p-2">
 
     <div className="mb-6">
       <label htmlFor="startDate" className="block text-sm font-medium text-gray-700">
@@ -762,7 +762,7 @@ return (
     {loading && <p className="text-blue-500">Загрузка данных...</p>}
     {error && <p className="text-red-500">Ошибка: {error}</p>}
     {data && (
-      <div className="mt-4 bg-white p-4 rounded space-y-6">
+      <div className="mt-4 bg-white rounded space-y-6">
         <h2 className="text-xl font-semibold mb-4">Результаты:</h2>
 
         {data.get_requests_by_status && (
@@ -951,5 +951,14 @@ return (
 
       </div>
     )}
+
+<div>
+//     <button
+      onClick={exportToPDF}
+      className="bg-green-500 text-white py-2 px-4 rounded hover:bg-green-600"
+    >
+      Экспортировать в PDF
+    </button>
+  </div>
   </div>
 )}
